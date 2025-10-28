@@ -24,6 +24,7 @@
     #msg {
       font-size: 18px;
       color: #444;
+      margin-top: 15px;
     }
   </style>
 </head>
@@ -33,11 +34,17 @@
   <div id="reader"></div>
 
   <script>
-    // Substitui pelo link do teu formulário Microsoft Forms
+    // Substitui pelo link do teu Microsoft Form
     const formUrl = "https://forms.office.com/e/8LSspwzwkY?origin=lprLink";
 
-    function abrirForm(id) {
-      window.location.href = `${formUrl}?IDdoBilhete=${encodeURIComponent(id)}`;
+    async function abrirForm(id) {
+      try {
+        await navigator.clipboard.writeText(id);
+        document.getElementById("msg").innerText = "Código copiado para a área de transferência!";
+      } catch {
+        document.getElementById("msg").innerText = "Não foi possível copiar automaticamente. Copie manualmente se necessário.";
+      }
+      setTimeout(() => window.location.href = formUrl, 1000);
     }
 
     const scanner = new Html5Qrcode("reader");
@@ -48,16 +55,15 @@
         return;
       }
 
-      // Tenta usar câmara traseira se disponível
-      let backCamera = devices.find(d => /back|traseira|rear|environment/i.test(d.label));
-      let cameraId = backCamera ? backCamera.id : devices[0].id;
+      const backCam = devices.find(d => /back|traseira|rear|environment/i.test(d.label));
+      const camId = backCam ? backCam.id : devices[0].id;
 
       scanner.start(
-        cameraId,
+        camId,
         { fps: 10, qrbox: { width: 400, height: 400 } },
-        decodedText => {
-          document.getElementById("msg").innerText = "QR lido com sucesso!";
-          scanner.stop().then(() => abrirForm(decodedText));
+        text => {
+          document.getElementById("msg").innerText = "QR lido: " + text;
+          scanner.stop().then(() => abrirForm(text));
         },
         error => {}
       );
@@ -67,4 +73,3 @@
   </script>
 </body>
 </html>
-
