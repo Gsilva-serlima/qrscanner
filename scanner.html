@@ -2,30 +2,67 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <title>Teste QR</title>
+  <title>Validação de Bilhetes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #fafafa;
+      margin: 0;
+      padding: 20px;
+    }
+    h2 {
+      color: #333;
+    }
+    #reader {
+      width: 400px;
+      max-width: 90vw;
+      margin: 30px auto;
+    }
+    #msg {
+      font-size: 18px;
+      color: #444;
+    }
+  </style>
 </head>
 <body>
-  <h2>Leitor QR Teste</h2>
-  <div id="reader" style="width:300px;margin:auto;"></div>
-  <p id="output"></p>
+  <h2>Verificação de Bilhete</h2>
+  <p id="msg">Aponte a câmara para o QR code</p>
+  <div id="reader"></div>
 
   <script>
+    // Substitui pelo link do teu formulário Microsoft Forms
+    const formUrl = "https://forms.office.com/Pages/ResponsePage.aspx?id=NjfyAjiDgk6ajDoN-N1G-JqVMyx7tlhGmDFug09pWbNUQjlZRFQ3NDZOUDI0SkUyRUtISDJBTUhDMy4u";
+
+    function abrirForm(id) {
+      window.location.href = `${formUrl}?IDdoBilhete=${encodeURIComponent(id)}`;
+    }
+
     const scanner = new Html5Qrcode("reader");
+
     Html5Qrcode.getCameras().then(devices => {
-      if (!devices || !devices.length) {
-        document.getElementById("output").innerText = "Nenhuma câmara detectada";
+      if (!devices || devices.length === 0) {
+        document.getElementById("msg").innerText = "Nenhuma câmara encontrada.";
         return;
       }
+
+      // Tenta usar câmara traseira se disponível
+      let backCamera = devices.find(d => /back|traseira|rear|environment/i.test(d.label));
+      let cameraId = backCamera ? backCamera.id : devices[0].id;
+
       scanner.start(
-        devices[0].id,
-        { fps: 10, qrbox: 250 },
-        text => {
-          document.getElementById("output").innerText = "QR lido: " + text;
-          scanner.stop();
+        cameraId,
+        { fps: 10, qrbox: { width: 400, height: 400 } },
+        decodedText => {
+          document.getElementById("msg").innerText = "QR lido com sucesso!";
+          scanner.stop().then(() => abrirForm(decodedText));
         },
-        err => {}
+        error => {}
       );
+    }).catch(err => {
+      document.getElementById("msg").innerText = "Erro ao aceder à câmara: " + err;
     });
   </script>
 </body>
