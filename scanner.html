@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Teste QR</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+  <h2>Leitor QR Teste</h2>
+  <div id="reader" style="width:300px;margin:auto;"></div>
+  <p id="output"></p>
+
+  <script>
+    const scanner = new Html5Qrcode("reader");
+    Html5Qrcode.getCameras().then(devices => {
+      if (!devices || !devices.length) {
+        document.getElementById("output").innerText = "Nenhuma câmara detectada";
+        return;
+      }
+      scanner.start(
+        devices[0].id,
+        { fps: 10, qrbox: 250 },
+        text => {
+          document.getElementById("output").innerText = "QR lido: " + text;
+          scanner.stop();
+        },
+        err => {}
+      );
+    });
+  </script>
+</body>
+</html>
